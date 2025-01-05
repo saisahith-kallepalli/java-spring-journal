@@ -2,9 +2,11 @@ package com.journal.journalApp.controller;
 
 import com.journal.journalApp.entity.JournalEntry;
 import com.journal.journalApp.service.JournalEntryService;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,27 +21,36 @@ public class JournalEntryControllerV_2 {
 
     @GetMapping
     public List<JournalEntry> getAll(){
-        return null;
+        return journalEntryService.getAllEntries();
     }
 
     @PostMapping
-    public String createEntries(@RequestBody JournalEntry entry){
+    public JournalEntry createEntries(@RequestBody JournalEntry entry){
+        entry.setDate(LocalDateTime.now());
         journalEntryService.saveJournalEntry(entry);
-        return entry.getId();
+        return entry;
     }
 
     @GetMapping("id/{journalId}")
-    public JournalEntry getJournalEntryById(@PathVariable String journalId){
-        return null;
+    public JournalEntry getJournalEntryById(@PathVariable ObjectId journalId){
+       return journalEntryService.getEntryById(journalId).orElse(null);
+
     }
 
     @DeleteMapping("id/{journalId}")
-    public String deleteJournalEntryById(@PathVariable String journalId){
+    public ObjectId deleteJournalEntryById(@PathVariable ObjectId journalId){
+        journalEntryService.deleteById(journalId);
         return journalId;
     }
 
     @PutMapping("id/{journalId}")
-    public String updateEntries(@PathVariable String journalId,@RequestBody JournalEntry entry){
+    public ObjectId updateEntries(@PathVariable ObjectId journalId,@RequestBody JournalEntry entry){
+        JournalEntry oldEntry=journalEntryService.getEntryById(journalId).orElse(null);
+        if(oldEntry!=null){
+            oldEntry.setTitle(entry.getTitle()!=null && !entry.getTitle().equals("")?entry.getTitle(): oldEntry.getTitle());
+            oldEntry.setDescription(entry.getDescription()!=null && !entry.getDescription().equals("")?entry.getDescription(): oldEntry.getDescription());
+        }
+        journalEntryService.saveJournalEntry(oldEntry);
         return journalId;
     }
 }
